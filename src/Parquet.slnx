@@ -19,11 +19,19 @@
     <File Path="../.github/workflows/build.yml" />
   </Folder>
   <Folder Name="/test/">
-    <Project Path="Parquet.PerfRunner/Parquet.PerfRunner.csproj" />
-    <Project Path="Parquet.Test/Parquet.Test.csproj" />
-    <Project Path="Parquet.Underfloor/Parquet.Underfloor.csproj" />
+    <Project Path="Parquet.PerfRunner/Parquet.PerfRunner.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="Parquet.Test/Parquet.Test.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="Parquet.Underfloor/Parquet.Underfloor.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
-  <Project Path="Parquet.Data.Analysis/Parquet.Data.Analysis.csproj" />
+  <Project Path="Parquet.Data.Analysis/Parquet.Data.Analysis.csproj">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
   <Project Path="Parquet/Parquet.csproj" />
   <Properties Name="Performance">
     <Property Name="HasPerformanceSessions" Value="true" />
