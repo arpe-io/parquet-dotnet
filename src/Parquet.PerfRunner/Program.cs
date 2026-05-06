@@ -24,6 +24,9 @@ if(args.Length == 1) {
         case "compression":
             BenchmarkRunner.Run<CompressionBenchmarks>();
             break;
+        case "bigdecimal":
+            BenchmarkRunner.Run<BigDecimalBenchmarks>();
+            break;
     }
 } else {
     await new DataTypes().RandomStrings();
