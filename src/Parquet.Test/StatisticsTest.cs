@@ -31,6 +31,35 @@ public class StatisticsTest : TestBase {
         }
     }
 
+    [Theory]
+    [InlineData(DateTimeFormat.DateAndTime, null, 1_000L)]
+    [InlineData(DateTimeFormat.DateAndTimeMicros, null, 1_000_000L)]
+    [InlineData(DateTimeFormat.Timestamp, DateTimeTimeUnit.Millis, 1_000L)]
+    [InlineData(DateTimeFormat.Timestamp, DateTimeTimeUnit.Micros, 1_000_000L)]
+    [InlineData(DateTimeFormat.Timestamp, DateTimeTimeUnit.Nanos, 1_000_000_000L)]
+    public async Task DateTime_min_max_are_in_the_unit_of_the_column(DateTimeFormat format, DateTimeTimeUnit? unit, long perSecond) {
+        var field = new DateTimeDataField("ts", format, isAdjustedToUTC: true, unit: unit);
+        var schema = new ParquetSchema(field);
+        var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        DateTime[] values = [epoch.AddSeconds(30), epoch.AddSeconds(10), epoch.AddSeconds(20)];
+
+        var ms = new MemoryStream();
+        await using(ParquetWriter w = await ParquetWriter.CreateAsync(schema, ms)) {
+            using ParquetRowGroupWriter rg = w.CreateRowGroup();
+            await rg.WriteAsync<DateTime>(schema.DataFields[0], values);
+        }
+
+        ms.Position = 0;
+        await using(ParquetReader r = await ParquetReader.CreateAsync(ms)) {
+            using ParquetRowGroupReader rgr = r.OpenRowGroupReader(0);
+            DataColumnStatistics? stats = rgr.GetStatistics(schema.DataFields[0]);
+            Assert.NotNull(stats);
+            // Raw values, in the unit the column stores: 10 and 30 seconds after the epoch.
+            Assert.Equal(10 * perSecond, stats.MinValue);
+            Assert.Equal(30 * perSecond, stats.MaxValue);
+        }
+    }
+
     [Fact]
     public async Task Issue735() {
         ReadOnlyMemory<byte> id = new byte[]
