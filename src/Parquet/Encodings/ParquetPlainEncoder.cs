@@ -370,7 +370,18 @@ static class ParquetPlainEncoder {
                 result = BitConverter.GetBytes(days);
                 return true;
             case TType.INT64:
-                long unixTime = value.ToUtc().ToUnixMilliseconds();
+                // Statistics must be in the unit of the column, as Encode(ReadOnlySpan<DateTime>, ...)
+                // writes the data. They were always written in milliseconds: on a microsecond or
+                // nanosecond column, readers that prune with statistics then skip matching rows.
+                long unixTime;
+                if(tse.LogicalType?.TIMESTAMP?.Unit?.NANOS is not null)
+                    unixTime = value.ToUtc().ToUnixNanoseconds();
+                else if(tse.IsTimestampMicros())
+                    unixTime = value.ToUtc().ToUnixMicroseconds();
+                else if(tse.LogicalType?.TIMESTAMP?.Unit?.MILLIS is not null)
+                    unixTime = value.ToUnixMilliseconds();
+                else
+                    unixTime = value.ToUtc().ToUnixMilliseconds();
                 result = BitConverter.GetBytes(unixTime);
                 return true;
             case TType.INT96:
